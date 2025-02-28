@@ -51,6 +51,16 @@ class ZutoJob:
         if self._path not in _job_map:
             _job_map[self._path] = self.id
 
+        self.whened
+        self.lifetimed
+
+    @cached_property
+    def lifetimed(self):
+        if self.lifetime:
+            return time_parse(self.lifetime)
+        return None
+
+
     def _handle_dict(self, step: dict):
         cmd_pair = step.popitem()
         cmd = cmd_pair[0]
