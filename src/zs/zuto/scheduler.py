@@ -1,4 +1,5 @@
 import os
+import sys
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -7,10 +8,17 @@ from apscheduler.executors.pool import ThreadPoolExecutor
 from zs.zuto.ctx import ZutoCtx
 from zs.zuto.job import ZutoJob
 from zuu.stdext_importlib import import_file
+from zs.zuto.utils import gather_zuto_mods
 
 
 class ZutoScheduler:
-    def __init__(self, path: str):
+    def __init__(
+        self,
+        path: str,
+        exclude_parsing_py: bool = False,
+        exclude_parsing_mod: bool = False,
+        ctx: ZutoCtx | None = None,
+    ):
         path = os.path.abspath(path)  # Convert to absolute path first
         assert os.path.exists(path), f"Path {path} does not exist"
         assert os.path.isdir(path), f"Path {path} is not a directory"
@@ -24,7 +32,23 @@ class ZutoScheduler:
             self.event_handler, path, recursive=True
         )  # Now using absolute path
         self.jobs = {}
-        self.ctx = ZutoCtx(self)
+        self.ctx = ctx or ZutoCtx(self)
+        if not ctx and not exclude_parsing_mod:
+            self.ctx.funcMaps.update(
+                gather_zuto_mods(os.path.dirname(os.path.abspath(__file__)))
+            )
+            self.ctx.funcMaps.update(
+                gather_zuto_mods(
+                    os.path.join(
+                        os.path.dirname(os.path.dirname(sys.executable)),
+                        "Lib",
+                        "site-packages",
+                        "zs",
+                        "zuto",
+                    )
+                )
+            )
+
         self.path = path
 
         # parse current folder for jobs
@@ -33,7 +57,7 @@ class ZutoScheduler:
                 self.add_job(
                     file, ZutoJob.from_file(os.path.join(path, file), self.ctx)
                 )
-            elif file.endswith(".py"):
+            elif file.endswith(".py") and not exclude_parsing_py:
                 mod = import_file(file, "zs.zuto.funcs")
                 eligibles = [name for name in dir(mod.Cmds) if not name.startswith("_")]
                 for name in eligibles:

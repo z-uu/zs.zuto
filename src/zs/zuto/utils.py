@@ -1,8 +1,12 @@
 import ctypes
 import datetime
+import os
 import threading
 from functools import wraps
 from zuu.util_timeparse import time_parse
+import sys
+from zuu.stdext_importlib import import_file
+import importlib
 
 
 def lifetime(
@@ -61,3 +65,53 @@ def lifetime(
         return wrapper
 
     return decorator
+
+
+realPath = os.path.dirname(os.path.abspath(__file__))
+
+
+def gather_zuto_mods(dirpath: str):
+    funcs = {}
+    assert os.path.exists(dirpath), f"Path {dirpath} does not exist"
+
+    # Add the directory to sys.path temporarily
+    sys.path.insert(0, dirpath)
+    try:
+        for path in os.listdir(dirpath):
+            fullpath = os.path.join(dirpath, path)
+            if os.path.isdir(fullpath):
+                if path.startswith("_"):
+                    continue
+
+                # Check for valid Python package
+                init_py = os.path.join(fullpath, "__init__.py")
+                if not os.path.exists(init_py):
+                    continue
+
+                try:
+                    # Use proper module naming convention
+                    mod_name = f"zs.zuto.{path}" if dirpath == realPath else path
+                    mod = importlib.import_module(mod_name)
+
+                    if not hasattr(mod, "Cmds"):
+                        print(
+                            f"Warning: Module {mod_name} has no Cmds class",
+                            file=sys.stderr,
+                        )
+                        continue
+
+                    # Collect commands
+                    for name in dir(mod.Cmds):
+                        if name.startswith("_"):
+                            continue
+                        funcs[name] = getattr(mod.Cmds, name)
+
+                except Exception as e:
+                    print(f"Error loading module {path}: {str(e)}", file=sys.stderr)
+                    continue
+
+    finally:
+        # Restore sys.path
+        sys.path.remove(dirpath)
+
+    return funcs
