@@ -1,0 +1,37 @@
+[project]
+name = "zs.zuto"
+version = "0.1.0"
+description = "Add your description here"
+authors = [
+    { name = "ZackaryW", email = "gitzackw@gmail.com" }
+]
+dependencies = [
+    "click>=8.1.8",
+    "watchdog>=6.0.0",
+    "apscheduler>=3.11.0",
+    "pyyaml>=6.0.2",
+    "zuu>=7.0.0",
+    "croniter>=6.0.0",
+    "dateparser>=1.2.1",
+    "psutil>=7.0.0",
+    "pygetwindow>=0.0.9",
+]
+readme = "README.md"
+requires-python = ">= 3.8"
+
+[project.scripts]
+"zs.zuto" = "src.zs.zuto.cli:zuto"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = []
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/zs"]
