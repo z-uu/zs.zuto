@@ -72,7 +72,8 @@ realPath = os.path.dirname(os.path.abspath(__file__))
 
 def gather_zuto_mods(dirpath: str):
     funcs = {}
-    assert os.path.exists(dirpath), f"Path {dirpath} does not exist"
+    if not os.path.exists(dirpath):
+        return funcs
 
     # Add the directory to sys.path temporarily
     sys.path.insert(0, dirpath)
