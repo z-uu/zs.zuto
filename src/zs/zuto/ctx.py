@@ -1,4 +1,6 @@
 import threading
+
+
 class ZutoCtx:
     __currentlyRunning = None
     __internalLock = threading.Lock()
@@ -21,4 +23,3 @@ class ZutoCtx:
     def currentlyRunning(self, value):
         with self.__internalLock:
             self.__currentlyRunning = value
-

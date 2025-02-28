@@ -2,6 +2,7 @@ import click
 from zs.zuto.scheduler import ZutoScheduler
 import time
 
+
 @click.command()
 @click.argument("path", type=click.Path(exists=True, file_okay=False, dir_okay=True))
 def zuto(path):
@@ -14,7 +15,6 @@ def zuto(path):
     except KeyboardInterrupt:
         scheduler.shutdown()
 
+
 if __name__ == "__main__":
     zuto()
-
-
