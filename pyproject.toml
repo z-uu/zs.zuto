@@ -20,7 +20,7 @@ readme = "README.md"
 requires-python = ">= 3.8"
 
 [project.scripts]
-"zs.zuto" = "src.zs.zuto.cli:zuto"
+"zs.zuto" = "zs.zuto.cli:zuto"
 
 [build-system]
 requires = ["hatchling"]
