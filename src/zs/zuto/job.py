@@ -81,10 +81,14 @@ class ZutoJob:
                 step_copy = step.copy()
                 self._handle_dict(step_copy)
             elif isinstance(step, str):
-                subprocess.Popen(
+                res = subprocess.Popen(
                     step,
                     shell=True,
                 )
+                res.wait()
+                if res.returncode != 0:
+                    print(f"Step {step} failed with return code {res.returncode}")
+                    return
 
     def execute(self):
         self._ctx.currentlyRunning = self
