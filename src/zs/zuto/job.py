@@ -73,23 +73,29 @@ class ZutoJob:
             raise ValueError(f"Unknown command: {cmd}")
 
     def _execute(self):
+        try:
+            print(f"Name: {self.name}")
 
-        print(f"Name: {self.name}")
-
-        for step in self.steps:
-            if isinstance(step, dict):
-                step_copy = step.copy()
-                self._handle_dict(step_copy)
-            elif isinstance(step, str):
-                print(f"Step: {step[:40]}...")
-                res = subprocess.Popen(
-                    step,
-                    shell=True,
-                )
+            for step in self.steps:
+                if isinstance(step, dict):
+                    step_copy = step.copy()
+                    self._handle_dict(step_copy)
+                elif isinstance(step, str):
+                    print(f"Step: {step[:40]}...")
+                    res = subprocess.Popen(
+                        step,
+                        shell=True,
+                    )
+                    res.wait()
+                    if res.returncode != 0:
+                        print(f"Step {step} failed with return code {res.returncode}")
+                        return
+        except KeyboardInterrupt:
+            print("\nJob execution interrupted by user")
+            # Clean up any running subprocesses
+            if 'res' in locals():
+                res.terminate()
                 res.wait()
-                if res.returncode != 0:
-                    print(f"Step {step} failed with return code {res.returncode}")
-                    return
 
     def execute(self):
         self._ctx.currentlyRunning = self
