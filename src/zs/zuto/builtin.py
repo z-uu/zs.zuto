@@ -5,7 +5,11 @@ import os
 class Builtin:
     @staticmethod
     def sleep(x: str):
-        sleep(int(x))
+        from zuu.util_timeparse import time_parse
+        import datetime
+        sleep_till = time_parse(x)
+        elapsed = datetime.datetime.now() - sleep_till
+        sleep(elapsed.total_seconds())
 
     @staticmethod
     def setenv(x: str):
