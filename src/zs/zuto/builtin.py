@@ -8,7 +8,7 @@ class Builtin:
         from zuu.util_timeparse import time_parse
         import datetime
         sleep_till = time_parse(x)
-        elapsed = datetime.datetime.now() - sleep_till
+        elapsed = sleep_till - datetime.datetime.now()
         sleep(elapsed.total_seconds())
 
     @staticmethod
