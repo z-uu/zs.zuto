@@ -81,6 +81,7 @@ class ZutoJob:
                 step_copy = step.copy()
                 self._handle_dict(step_copy)
             elif isinstance(step, str):
+                print(f"Step: {step[:40]}...")
                 res = subprocess.Popen(
                     step,
                     shell=True,
