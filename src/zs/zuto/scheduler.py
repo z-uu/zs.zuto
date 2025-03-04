@@ -9,6 +9,7 @@ from zs.zuto.ctx import ZutoCtx
 from zs.zuto.job import ZutoJob
 from zuu.stdext_importlib import import_file
 from zs.zuto.utils import gather_zuto_mods
+from datetime import datetime
 
 
 class ZutoScheduler:
@@ -73,9 +74,46 @@ class ZutoScheduler:
         existing_job: Job | None = self.scheduler.get_job(job_id)
         if existing_job and self.ctx.currentlyRunning is not existing_job:
             existing_job.remove()
+
+        # Check if the job's scheduled time has passed
+        scheduled_time = datetime.strptime(zuto_job.whened, "%Y-%m-%d %H:%M:%S")
+        if scheduled_time < datetime.now():
+            print(f"Job {job_id} was scheduled for {zuto_job.whened} which has passed. Queuing for execution.")
+            # Create a chain of jobs using APScheduler's own sequencing
+            if not hasattr(self, '_missed_jobs_queue'):
+                self._missed_jobs_queue = []
+                # Schedule the first missed job immediately
+                self._schedule_next_missed()
+            self._missed_jobs_queue.append((job_id, zuto_job))
+            return
+
         print(f"Scheduled task {job_id} to run at {zuto_job.whened}")
         self.scheduler.add_job(
-            zuto_job.execute, trigger="date", run_date=zuto_job.whened, id=job_id
+            zuto_job.execute, 
+            trigger="date", 
+            run_date=zuto_job.whened, 
+            id=job_id
+        )
+
+    def _schedule_next_missed(self):
+        """Schedule the next missed job using APScheduler's event system"""
+        if not hasattr(self, '_missed_jobs_queue') or not self._missed_jobs_queue:
+            return
+
+        job_id, zuto_job = self._missed_jobs_queue.pop(0)
+        print(f"Scheduling missed job {job_id} for immediate execution")
+        
+        job = self.scheduler.add_job(
+            zuto_job.execute,
+            trigger='date',
+            run_date=datetime.now(),
+            id=f'_missed_{job_id}'
+        )
+        
+        # Add listener for when the job completes
+        job.add_listener(
+            lambda event: self._schedule_next_missed() if event.code == 4096 else None,
+            mask=4096  # EVENT_JOB_EXECUTED code
         )
 
     def start(self):
